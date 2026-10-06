@@ -1,0 +1,29 @@
+flowchart TD
+    subgraph Discovery ["1. Customer Interview Session"]
+        A[Founder] -->|Conducts 30-min Interview| B[Target User / Developer]
+        B -->|Provides Feedback & Metrics| C[Raw Structured Transcript]
+        C -->|Compute Content Digest| D[SHA-256 Transcript Hash]
+    end
+
+    subgraph Verification ["2. Cryptographic Attestation"]
+        D -->|Generate SIWS Payload| E[SIWS Challenge Message]
+        B -->|Signs with Phantom / Solflare Ed25519| F[User Signature]
+        A -->|Signs with Founder Authority| G[Founder Signature]
+    end
+
+    subgraph OnChain ["3. Solana Anchor Runtime"]
+        F & G & D -->|RPC: record_interview| H[Founder Support Program]
+        H -->|Verify User & Founder PDAs| I{Valid Signatures & Quota?}
+        I -->|Yes| J[Initialize Interview PDA]
+        I -->|No| K[Revert: Unauthorized or Duplicate]
+        J -->|Increment Counter| L[Update Campaign PDA: 5/5 Users]
+        J -->|Emit| M[InterviewRecorded Event]
+    end
+
+    subgraph Enterprise ["4. Enterprise Integration & Notification"]
+        M -->|WebSocket Event Listener| N[Orchestrator Automation Agent]
+        N -->|Dispatch Email Digest| O[Resend Enterprise API]
+        N -->|Broadcast Notification| P[Discord / Slack Mentor Webhook]
+        O --> Q[Colosseum Accelerator Mentors]
+        P --> R[Founder Public Discovery Channel]
+    end

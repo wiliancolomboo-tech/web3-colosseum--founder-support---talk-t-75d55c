@@ -1,0 +1,19 @@
+FROM node:20-slim AS builder
+
+WORKDIR /usr/src/app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY package*.json tsconfig.json ./
+RUN npm ci
+
+COPY scripts/ ./scripts/
+COPY programs/ ./programs/
+
+RUN npm run build || true
+
+ENTRYPOINT ["npx", "ts-node", "scripts/orchestrate-interviews.ts"]

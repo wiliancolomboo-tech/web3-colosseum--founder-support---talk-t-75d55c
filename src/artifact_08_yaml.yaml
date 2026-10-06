@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  colosseum-founder-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - PROGRAM_ID=FndrSupp111111111111111111111111111111111111
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - COMMUNITY_WEBHOOK_URL=${COMMUNITY_WEBHOOK_URL}
+      - MENTOR_REPORT_EMAIL=mentors@colosseum.org
+    restart: on-failure
