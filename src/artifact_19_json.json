@@ -1,0 +1,83 @@
+{
+  "version": "0.1.0",
+  "name": "pulse_discovery",
+  "instructions": [
+    {
+      "name": "initializeCampaign",
+      "accounts": [
+        { "name": "founder", "isMut": true, "isSigner": true },
+        { "name": "campaign", "isMut": true, "isSigner": false },
+        { "name": "escrowVault", "isMut": true, "isSigner": false },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "campaignId", "type": "u64" },
+        { "name": "rewardPerInterview", "type": "u64" }
+      ]
+    },
+    {
+      "name": "recordInterview",
+      "accounts": [
+        { "name": "founder", "isMut": true, "isSigner": true },
+        { "name": "user", "isMut": true, "isSigner": false },
+        { "name": "campaign", "isMut": true, "isSigner": false },
+        { "name": "interviewSession", "isMut": true, "isSigner": false },
+        { "name": "escrowVault", "isMut": true, "isSigner": false },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "transcriptHash", "type": { "array": ["u8", 32] } }
+      ]
+    },
+    {
+      "name": "completeCampaign",
+      "accounts": [
+        { "name": "founder", "isMut": true, "isSigner": true },
+        { "name": "campaign", "isMut": true, "isSigner": false }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Campaign",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "founder", "type": "publicKey" },
+          { "name": "campaignId", "type": "u64" },
+          { "name": "rewardPerInterview", "type": "u64" },
+          { "name": "completedInterviews", "type": "u8" },
+          { "name": "isActive", "type": "bool" },
+          { "name": "bump", "type": "u8" },
+          { "name": "vaultBump", "type": "u8" },
+          { "name": "createdAt", "type": "i64" }
+        ]
+      }
+    },
+    {
+      "name": "InterviewSession",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "campaign", "type": "publicKey" },
+          { "name": "user", "type": "publicKey" },
+          { "name": "slotIndex", "type": "u8" },
+          { "name": "transcriptHash", "type": { "array": ["u8", 32] } },
+          { "name": "completedAt", "type": "i64" },
+          { "name": "bump", "type": "u8" }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    { "code": 6000, "name": "CampaignFull", "msg": "Campaign is already full (5 users already completed)." },
+    { "code": 6001, "name": "CampaignInactive", "msg": "Campaign is not active." },
+    { "code": 6002, "name": "InvalidRewardAmount", "msg": "Reward per user must be greater than zero." },
+    { "code": 6003, "name": "EmptyTranscriptHash", "msg": "Provided transcript hash cannot be empty." },
+    { "code": 6004, "name": "UserAlreadyParticipated", "msg": "User has already participated in this discovery campaign." },
+    { "code": 6005, "name": "MilestoneIncomplete", "msg": "Campaign milestone has not reached the required 5 users." },
+    { "code": 6006, "name": "NumericalOverflow", "msg": "Arithmetic overflow during balance calculation." },
+    { "code": 6007, "name": "Unauthorized", "msg": "Unauthorized signer for completing campaign." }
+  ]
+}

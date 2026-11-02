@@ -1,0 +1,6 @@
+3/3 Transparent PMF verification for accelerator review boards, zero friction for builders. 
+
+Full open-source repo with turnkey Docker deploy, test suite, and Solana Devnet program:
+github.com/solana-bounties/colosseum-talk5
+
+Built for winners on @solana & @Colosseum! 🚀 #Solana #BountyWin

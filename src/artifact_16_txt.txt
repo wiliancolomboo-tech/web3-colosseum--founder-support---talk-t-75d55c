@@ -1,0 +1,5 @@
+2/3 🛠️ How it works:
+1️⃣ Verified Solana users connect wallet & complete interview session.
+2️⃣ Founder + User dual-sign transcript hashes.
+3️⃣ Anchor program enforces non-repudiation, sybil checks & tracks quota (5/5).
+4️⃣ Real-time alerts to Slack & @resend email audit reports! 📬

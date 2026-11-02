@@ -1,0 +1,8 @@
+{
+  "status": "UP",
+  "service": "colosseum-pod-daemon",
+  "network": "solana-devnet",
+  "programId": "CPod555555555555555555555555555555555555555",
+  "syncedSlot": 298410291,
+  "uptimeSeconds": 14280
+}

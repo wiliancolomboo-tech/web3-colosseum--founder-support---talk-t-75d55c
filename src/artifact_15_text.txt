@@ -1,0 +1,5 @@
+How it works:
+1️⃣ Founders deposit an interview micro-bounty into an @anchorlang escrow vault.
+2️⃣ Verified Solana users book calls via automated @resend workflows.
+3️⃣ Both parties sign an Ed25519 SHA-256 transcript digest.
+4️⃣ Escrow disburses instantly. When interview #5 is verified, an immutable Milestone PDA is minted on-chain.

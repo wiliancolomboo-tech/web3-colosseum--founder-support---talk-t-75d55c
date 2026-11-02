@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  proofofuser-daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: colosseum-userloop-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - PROGRAM_ID=Loop555555555555555555555555555555555555555
+      - FOUNDER_KEYPAIR_PATH=/app/keys/founder.json
+      - SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+      - DISCORD_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+      - RESEND_API_KEY=re_123456789abcdef
+      - RESEND_RECIPIENT_EMAIL=accelerator@colosseum.org
+    volumes:
+      - ./keys:/app/keys:ro
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e 'require(\"http\").get(\"http://localhost:8080/health\", (res) => process.exit(res.statusCode === 200 ? 0 : 1))'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

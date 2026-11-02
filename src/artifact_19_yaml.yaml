@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  colosseum-poi-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: colosseum_poi_runner
+    environment:
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - PROGRAM_ID=CPoi5UsersDiscovery11111111111111111111111111
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - FOUNDER_NOTIFICATION_EMAIL=${FOUNDER_NOTIFICATION_EMAIL}
+    volumes:
+      - ~/.config/solana:/root/.config/solana:ro
+    restart: "no"

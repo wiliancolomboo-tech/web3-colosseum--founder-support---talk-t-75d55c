@@ -1,0 +1,9 @@
+talk5-orchestrator/
+├── package.json
+├── tsconfig.json
+├── src/
+│   ├── index.ts
+│   ├── solanaClient.ts
+│   └── services/
+│       ├── notifier.ts
+│       └── resendMailer.ts

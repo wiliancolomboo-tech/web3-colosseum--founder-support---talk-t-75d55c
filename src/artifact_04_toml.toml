@@ -1,0 +1,20 @@
+[package]
+name = "colosseum_founder_support"
+version = "0.1.0"
+description = "Colosseum Founder Support - Verifiable Talk to 5 Users Protocol"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "colosseum_founder_support"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
+solana-program = "=1.18.26"

@@ -1,0 +1,6 @@
+Built on @solana & Anchor:
+⚡️ Dual-signed transcript hashes permanently anchored to PDAs
+⚡️ Programmatic escrow: Users get paid 0.1 SOL instantly upon interview completion
+⚡️ Real-time synthesis: Pushes verified pain scores & NPS directly to team Slack + Resend receipts
+
+No fake interviews. Real cryptographic validation.

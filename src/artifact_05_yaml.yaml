@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  userpulse-daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: colosseum-userpulse-engine
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - PROGRAM_ID=UpuLSe5uSr5xGZ2p9qJ8nFk1vL7tW3yB4mC6dQ8eZrT
+      - FOUNDER_PRIVATE_KEY_HEX=${FOUNDER_PRIVATE_KEY_HEX}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - PORT=8080
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

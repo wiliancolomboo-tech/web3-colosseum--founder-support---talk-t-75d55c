@@ -1,11 +1,9 @@
+GET /health
 {
   "status": "HEALTHY",
-  "program_id": "FndrSupp111111111111111111111111111111111111",
-  "founder_address": "8x2t...Fndr",
-  "campaign_target": 5,
-  "completed_interviews": 5,
-  "signatures_verified": true,
-  "discord_webhook_online": true,
-  "resend_pipeline_online": true,
-  "latest_block_slot": 298410291
+  "program_id": "ColoSupp111111111111111111111111111111111111",
+  "verified_interviews": 5,
+  "milestone_satisfied": true,
+  "uptime_seconds": 86420,
+  "rpc_latency_ms": 48
 }

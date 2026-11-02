@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  colosseum-intel-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: colosseum_founder_intel
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - PROGRAM_ID=FndrSupp111111111111111111111111111111111111
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+    volumes:
+      - ./transcripts:/usr/src/app/transcripts:ro
+      - ./keys:/usr/src/app/keys:ro
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

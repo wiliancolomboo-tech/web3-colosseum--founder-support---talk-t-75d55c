@@ -1,0 +1,11 @@
+# Solana Network Configuration
+SOLANA_RPC_URL=https://api.devnet.solana.com
+PROGRAM_ID=ColoFeed555555555555555555555555555555555555
+
+# Enterprise Services
+RESEND_API_KEY=re_123456789_abcdefghijklmnopqrstuvwx
+RESEND_FROM_EMAIL=updates@colosseum.org
+SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+
+# Operational Keys
+FOUNDER_KEYPAIR_PATH=./wallets/founder.json

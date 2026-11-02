@@ -1,0 +1,9 @@
+cli/
+├── package.json
+├── tsconfig.json
+├── src/
+│   ├── config.ts
+│   ├── services/
+│   │   ├── email.ts
+│   │   └── slack.ts
+│   └── index.ts

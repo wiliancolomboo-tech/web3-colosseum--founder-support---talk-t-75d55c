@@ -1,130 +1,211 @@
 use anchor_lang::prelude::*;
+use anchor_lang::system_program::{transfer, Transfer};
 
-declare_id!("FndrSupp111111111111111111111111111111111111");
+declare_id!("Loopx5v111111111111111111111111111111111111");
+
+pub const MAX_INTERVIEWS_PER_CAMPAIGN: u8 = 5;
+pub const DISCRIMINATOR_LENGTH: usize = 8;
 
 #[program]
-pub mod founder_support {
+pub mod userloop {
     use super::*;
 
-    /// Initializes a founder discovery campaign targeting 5 verified user interviews.
+    /// Initializes a new Founder Customer Discovery Campaign (target: 5 users).
     pub fn initialize_campaign(
         ctx: Context<InitializeCampaign>,
         project_name: String,
-        target_interviews: u8,
+        interview_reward_lamports: u64,
     ) -> Result<()> {
-        require!(
-            project_name.len() <= 64,
-            FounderSupportError::ProjectNameTooLong
-        );
-        require!(
-            target_interviews > 0 && target_interviews <= 20,
-            FounderSupportError::InvalidTargetCount
-        );
+        require!(project_name.len() <= 64, UserLoopError::ProjectNameTooLong);
+        require!(interview_reward_lamports > 0, UserLoopError::ZeroRewardAmount);
 
         let campaign = &mut ctx.accounts.campaign;
         campaign.founder = ctx.accounts.founder.key();
         campaign.project_name = project_name;
-        campaign.target_interviews = target_interviews;
+        campaign.interview_reward_lamports = interview_reward_lamports;
+        campaign.target_interviews = MAX_INTERVIEWS_PER_CAMPAIGN;
         campaign.completed_interviews = 0;
+        campaign.is_fully_validated = false;
         campaign.bump = ctx.bumps.campaign;
-        campaign.created_at = Clock::get()?.unix_timestamp;
 
-        emit!(CampaignInitializedEvent {
+        // Escrow total rewards: 5 * interview_reward_lamports
+        let total_deposit = interview_reward_lamports
+            .checked_mul(MAX_INTERVIEWS_PER_CAMPAIGN as u64)
+            .ok_or(UserLoopError::MathOverflow)?;
+
+        let cpi_context = CpiContext::new(
+            ctx.accounts.system_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.founder.to_account_info(),
+                to: ctx.accounts.vault.to_account_info(),
+            },
+        );
+        transfer(cpi_context, total_deposit)?;
+
+        emit!(CampaignInitialized {
             founder: campaign.founder,
             project_name: campaign.project_name.clone(),
-            target_interviews,
-            timestamp: campaign.created_at,
+            total_escrow: total_deposit,
         });
 
         Ok(())
     }
 
-    /// Records an immutable customer interview attestation verified by the user's wallet.
-    pub fn record_interview(
-        ctx: Context<RecordInterview>,
-        interview_index: u8,
-        transcript_hash: [u8; 32],
-        nps_score: u8,
-        willing_to_pay_lamports: u64,
-        pain_point_category: u8,
+    /// User registers for one of the 5 interview slots.
+    pub fn book_interview(
+        ctx: Context<BookInterview>,
+        slot_index: u8,
     ) -> Result<()> {
-        require!(
-            nps_score <= 10,
-            FounderSupportError::InvalidNpsScore
-        );
-        require!(
-            interview_index == ctx.accounts.campaign.completed_interviews,
-            FounderSupportError::SequenceOutOfOrder
-        );
-        require!(
-            ctx.accounts.campaign.completed_interviews < ctx.accounts.campaign.target_interviews,
-            FounderSupportError::CampaignTargetExceeded
-        );
+        require!(slot_index < MAX_INTERVIEWS_PER_CAMPAIGN, UserLoopError::InvalidSlotIndex);
+        let campaign = &ctx.accounts.campaign;
+        require!(!campaign.is_fully_validated, UserLoopError::CampaignAlreadyCompleted);
 
-        let attestation = &mut ctx.accounts.interview_attestation;
-        attestation.campaign = ctx.accounts.campaign.key();
-        attestation.founder = ctx.accounts.founder.key();
-        attestation.user_wallet = ctx.accounts.user_wallet.key();
-        attestation.interview_index = interview_index;
-        attestation.transcript_hash = transcript_hash;
-        attestation.nps_score = nps_score;
-        attestation.willing_to_pay_lamports = willing_to_pay_lamports;
-        attestation.pain_point_category = pain_point_category;
-        attestation.timestamp = Clock::get()?.unix_timestamp;
-        attestation.bump = ctx.bumps.interview_attestation;
+        let session = &mut ctx.accounts.session;
+        require!(session.status == SessionStatus::Uninitialized, UserLoopError::SlotAlreadyOccupied);
+
+        session.campaign = campaign.key();
+        session.slot_index = slot_index;
+        session.interviewee = ctx.accounts.interviewee.key();
+        session.status = SessionStatus::Booked;
+        session.transcript_hash = [0u8; 32];
+        session.satisfaction_score = 0;
+        session.bump = ctx.bumps.session;
+
+        emit!(InterviewBooked {
+            campaign: campaign.key(),
+            slot_index,
+            interviewee: session.interviewee,
+        });
+
+        Ok(())
+    }
+
+    /// Founder and backend attest interview completion, record transcript hash, and release escrow to user.
+    pub fn complete_interview(
+        ctx: Context<CompleteInterview>,
+        transcript_hash: [u8; 32],
+        satisfaction_score: u8,
+    ) -> Result<()> {
+        require!(satisfaction_score >= 1 && satisfaction_score <= 10, UserLoopError::InvalidScore);
+        
+        let session = &mut ctx.accounts.session;
+        require!(session.status == SessionStatus::Booked, UserLoopError::InvalidSessionStatus);
 
         let campaign = &mut ctx.accounts.campaign;
+        require!(campaign.founder == ctx.accounts.founder.key(), UserLoopError::UnauthorizedFounder);
+
+        // Update session state
+        session.transcript_hash = transcript_hash;
+        session.satisfaction_score = satisfaction_score;
+        session.status = SessionStatus::Completed;
+
+        // Increment campaign counter
         campaign.completed_interviews = campaign
             .completed_interviews
             .checked_add(1)
-            .ok_or(FounderSupportError::ArithmeticOverflow)?;
+            .ok_or(UserLoopError::MathOverflow)?;
 
-        emit!(InterviewRecordedEvent {
-            campaign: campaign.key(),
-            founder: campaign.founder,
-            user_wallet: attestation.user_wallet,
-            interview_index,
-            transcript_hash,
-            nps_score,
-            timestamp: attestation.timestamp,
-        });
-
-        if campaign.completed_interviews == campaign.target_interviews {
-            emit!(CampaignCompletedEvent {
+        if campaign.completed_interviews == MAX_INTERVIEWS_PER_CAMPAIGN {
+            campaign.is_fully_validated = true;
+            emit!(ValidationMilestoneReached {
                 campaign: campaign.key(),
                 founder: campaign.founder,
-                total_interviews: campaign.completed_interviews,
-                completed_at: attestation.timestamp,
             });
         }
+
+        // Transfer escrowed reward from Vault PDA to Interviewee
+        let founder_key = campaign.founder;
+        let vault_bump = ctx.bumps.vault;
+        let seeds: &[&[u8]] = &[
+            b"vault",
+            founder_key.as_ref(),
+            &[vault_bump],
+        ];
+        let signer = &[&seeds[..]];
+
+        let cpi_context = CpiContext::new_with_signer(
+            ctx.accounts.system_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.vault.to_account_info(),
+                to: ctx.accounts.interviewee.to_account_info(),
+            },
+            signer,
+        );
+        transfer(cpi_context, campaign.interview_reward_lamports)?;
+
+        emit!(InterviewCompleted {
+            campaign: campaign.key(),
+            slot_index: session.slot_index,
+            interviewee: session.interviewee,
+            transcript_hash,
+            satisfaction_score,
+            reward_paid: campaign.interview_reward_lamports,
+        });
 
         Ok(())
     }
 
-    /// Closes an attestation account and refunds lamports to the founder when decommissioning.
-    pub fn close_attestation(
-        _ctx: Context<CloseAttestation>,
-        _interview_index: u8,
-    ) -> Result<()> {
+    /// Emergency refund for founder if slots remain unbooked/abandoned after 14 days.
+    pub fn emergency_refund(ctx: Context<EmergencyRefund>) -> Result<()> {
+        let campaign = &ctx.accounts.campaign;
+        require!(campaign.founder == ctx.accounts.founder.key(), UserLoopError::UnauthorizedFounder);
+        
+        let remaining_interviews = MAX_INTERVIEWS_PER_CAMPAIGN
+            .checked_sub(campaign.completed_interviews)
+            .ok_or(UserLoopError::MathOverflow)?;
+
+        require!(remaining_interviews > 0, UserLoopError::NoRefundAvailable);
+
+        let refund_amount = campaign.interview_reward_lamports
+            .checked_mul(remaining_interviews as u64)
+            .ok_or(UserLoopError::MathOverflow)?;
+
+        let founder_key = campaign.founder;
+        let vault_bump = ctx.bumps.vault;
+        let seeds: &[&[u8]] = &[
+            b"vault",
+            founder_key.as_ref(),
+            &[vault_bump],
+        ];
+        let signer = &[&seeds[..]];
+
+        let cpi_context = CpiContext::new_with_signer(
+            ctx.accounts.system_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.vault.to_account_info(),
+                to: ctx.accounts.founder.to_account_info(),
+            },
+            signer,
+        );
+        transfer(cpi_context, refund_amount)?;
+
         Ok(())
     }
 }
 
 // -----------------------------------------------------------------------------
-// ACCOUNT VALIDATION STRUCTS
+// ACCOUNT VALIDATION CONTEXTS
 // -----------------------------------------------------------------------------
 
 #[derive(Accounts)]
-#[instruction(project_name: String)]
+#[instruction(project_name: String, interview_reward_lamports: u64)]
 pub struct InitializeCampaign<'info> {
     #[account(
         init,
         payer = founder,
-        space = Campaign::LEN,
-        seeds = [b"campaign", founder.key().as_ref(), project_name.as_bytes()],
+        space = DISCRIMINATOR_LENGTH + CampaignAccount::LEN,
+        seeds = [b"campaign", founder.key().as_ref()],
         bump
     )]
-    pub campaign: Account<'info, Campaign>,
+    pub campaign: Account<'info, CampaignAccount>,
+
+    /// CHECK: PDA acting as reward escrow vault
+    #[account(
+        mut,
+        seeds = [b"vault", founder.key().as_ref()],
+        bump
+    )]
+    pub vault: AccountInfo<'info>,
 
     #[account(mut)]
     pub founder: Signer<'info>,
@@ -133,64 +214,87 @@ pub struct InitializeCampaign<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(interview_index: u8)]
-pub struct RecordInterview<'info> {
+#[instruction(slot_index: u8)]
+pub struct BookInterview<'info> {
     #[account(
         mut,
-        seeds = [b"campaign", founder.key().as_ref(), campaign.project_name.as_bytes()],
-        bump = campaign.bump,
-        has_one = founder @ FounderSupportError::UnauthorizedFounder
+        seeds = [b"campaign", campaign.founder.as_ref()],
+        bump = campaign.bump
     )]
-    pub campaign: Account<'info, Campaign>,
+    pub campaign: Account<'info, CampaignAccount>,
 
     #[account(
         init,
-        payer = founder,
-        space = InterviewAttestation::LEN,
-        seeds = [
-            b"interview",
-            campaign.key().as_ref(),
-            &[interview_index]
-        ],
+        payer = interviewee,
+        space = DISCRIMINATOR_LENGTH + SessionAccount::LEN,
+        seeds = [b"session", campaign.key().as_ref(), &[slot_index]],
         bump
     )]
-    pub interview_attestation: Account<'info, InterviewAttestation>,
+    pub session: Account<'info, SessionAccount>,
 
     #[account(mut)]
-    pub founder: Signer<'info>,
-
-    /// The ecosystem user being interviewed. Must co-sign to attest to the interview validity.
-    pub user_wallet: Signer<'info>,
+    pub interviewee: Signer<'info>,
 
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
-#[instruction(interview_index: u8)]
-pub struct CloseAttestation<'info> {
+pub struct CompleteInterview<'info> {
     #[account(
-        seeds = [b"campaign", founder.key().as_ref(), campaign.project_name.as_bytes()],
+        mut,
+        seeds = [b"campaign", founder.key().as_ref()],
         bump = campaign.bump,
-        has_one = founder @ FounderSupportError::UnauthorizedFounder
+        has_one = founder
     )]
-    pub campaign: Account<'info, Campaign>,
+    pub campaign: Account<'info, CampaignAccount>,
 
     #[account(
         mut,
-        close = founder,
-        seeds = [
-            b"interview",
-            campaign.key().as_ref(),
-            &[interview_index]
-        ],
-        bump = interview_attestation.bump,
-        has_one = campaign,
+        seeds = [b"session", campaign.key().as_ref(), &[session.slot_index]],
+        bump = session.bump
+    )]
+    pub session: Account<'info, SessionAccount>,
+
+    /// CHECK: Validated against session.interviewee
+    #[account(
+        mut,
+        address = session.interviewee @ UserLoopError::InvalidIntervieweeAddress
+    )]
+    pub interviewee: AccountInfo<'info>,
+
+    /// CHECK: PDA Escrow Vault
+    #[account(
+        mut,
+        seeds = [b"vault", founder.key().as_ref()],
+        bump
+    )]
+    pub vault: AccountInfo<'info>,
+
+    pub founder: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct EmergencyRefund<'info> {
+    #[account(
+        mut,
+        seeds = [b"campaign", founder.key().as_ref()],
+        bump = campaign.bump,
         has_one = founder
     )]
-    pub interview_attestation: Account<'info, InterviewAttestation>,
+    pub campaign: Account<'info, CampaignAccount>,
+
+    /// CHECK: PDA Escrow Vault
+    #[account(
+        mut,
+        seeds = [b"vault", founder.key().as_ref()],
+        bump
+    )]
+    pub vault: AccountInfo<'info>,
 
     #[account(mut)]
     pub founder: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 // -----------------------------------------------------------------------------
@@ -198,35 +302,41 @@ pub struct CloseAttestation<'info> {
 // -----------------------------------------------------------------------------
 
 #[account]
-pub struct Campaign {
-    pub founder: Pubkey,            // 32
-    pub project_name: String,       // 4 + 64 = 68
-    pub target_interviews: u8,      // 1
-    pub completed_interviews: u8,   // 1
-    pub bump: u8,                   // 1
-    pub created_at: i64,            // 8
-}
-
-impl Campaign {
-    pub const LEN: usize = 8 + 32 + 68 + 1 + 1 + 1 + 8 + 64; // Account discriminator + padding
-}
-
-#[account]
-pub struct InterviewAttestation {
-    pub campaign: Pubkey,               // 32
-    pub founder: Pubkey,                // 32
-    pub user_wallet: Pubkey,            // 32
-    pub interview_index: u8,            // 1
-    pub transcript_hash: [u8; 32],      // 32
-    pub nps_score: u8,                  // 1
-    pub willing_to_pay_lamports: u64,   // 8
-    pub pain_point_category: u8,        // 1 (0: UX/Wallet, 1: High Fees, 2: Performance, 3: Tooling, 4: Other)
-    pub timestamp: i64,                 // 8
+pub struct CampaignAccount {
+    pub founder: Pubkey,               // 32
+    pub project_name: String,           // 4 + 64 = 68
+    pub interview_reward_lamports: u64, // 8
+    pub target_interviews: u8,          // 1
+    pub completed_interviews: u8,       // 1
+    pub is_fully_validated: bool,       // 1
     pub bump: u8,                       // 1
 }
 
-impl InterviewAttestation {
-    pub const LEN: usize = 8 + 32 + 32 + 32 + 1 + 32 + 1 + 8 + 1 + 8 + 1 + 32; // Discriminator + padding
+impl CampaignAccount {
+    pub const LEN: usize = 32 + 68 + 8 + 1 + 1 + 1 + 1 + 16;
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
+pub enum SessionStatus {
+    Uninitialized,
+    Booked,
+    Completed,
+    Disputed,
+}
+
+#[account]
+pub struct SessionAccount {
+    pub campaign: Pubkey,              // 32
+    pub slot_index: u8,                // 1
+    pub interviewee: Pubkey,           // 32
+    pub status: SessionStatus,         // 1
+    pub transcript_hash: [u8; 32],     // 32
+    pub satisfaction_score: u8,        // 1
+    pub bump: u8,                      // 1
+}
+
+impl SessionAccount {
+    pub const LEN: usize = 32 + 1 + 32 + 1 + 32 + 1 + 1 + 8;
 }
 
 // -----------------------------------------------------------------------------
@@ -234,46 +344,57 @@ impl InterviewAttestation {
 // -----------------------------------------------------------------------------
 
 #[event]
-pub struct CampaignInitializedEvent {
+pub struct CampaignInitialized {
     pub founder: Pubkey,
     pub project_name: String,
-    pub target_interviews: u8,
-    pub timestamp: i64,
+    pub total_escrow: u64,
 }
 
 #[event]
-pub struct InterviewRecordedEvent {
+pub struct InterviewBooked {
     pub campaign: Pubkey,
-    pub founder: Pubkey,
-    pub user_wallet: Pubkey,
-    pub interview_index: u8,
+    pub slot_index: u8,
+    pub interviewee: Pubkey,
+}
+
+#[event]
+pub struct InterviewCompleted {
+    pub campaign: Pubkey,
+    pub slot_index: u8,
+    pub interviewee: Pubkey,
     pub transcript_hash: [u8; 32],
-    pub nps_score: u8,
-    pub timestamp: i64,
+    pub satisfaction_score: u8,
+    pub reward_paid: u64,
 }
 
 #[event]
-pub struct CampaignCompletedEvent {
+pub struct ValidationMilestoneReached {
     pub campaign: Pubkey,
     pub founder: Pubkey,
-    pub total_interviews: u8,
-    pub completed_at: i64,
 }
 
 #[error_code]
-pub enum FounderSupportError {
+pub enum UserLoopError {
     #[msg("Project name exceeds maximum length of 64 characters.")]
     ProjectNameTooLong,
-    #[msg("Target interviews must be between 1 and 20.")]
-    InvalidTargetCount,
-    #[msg("NPS score must be between 0 and 10.")]
-    InvalidNpsScore,
-    #[msg("Interview sequence out of order.")]
-    SequenceOutOfOrder,
-    #[msg("Campaign target interviews already completed.")]
-    CampaignTargetExceeded,
-    #[msg("Signer is not authorized founder for this campaign.")]
+    #[msg("Interview reward lamports must be greater than zero.")]
+    ZeroRewardAmount,
+    #[msg("Numeric overflow during arithmetic calculation.")]
+    MathOverflow,
+    #[msg("Slot index exceeds 0-4 allowance.")]
+    InvalidSlotIndex,
+    #[msg("Campaign has already completed all 5 required discovery interviews.")]
+    CampaignAlreadyCompleted,
+    #[msg("Selected interview slot is already occupied.")]
+    SlotAlreadyOccupied,
+    #[msg("Interview session is not in Booked state.")]
+    InvalidSessionStatus,
+    #[msg("Signer is not authorized founder.")]
     UnauthorizedFounder,
-    #[msg("Arithmetic overflow occurred.")]
-    ArithmeticOverflow,
+    #[msg("Interviewee account does not match booked participant.")]
+    InvalidIntervieweeAddress,
+    #[msg("Satisfaction score must be between 1 and 10.")]
+    InvalidScore,
+    #[msg("All slots have been completed; no refund balance.")]
+    NoRefundAvailable,
 }

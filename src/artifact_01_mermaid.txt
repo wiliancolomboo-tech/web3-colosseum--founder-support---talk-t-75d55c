@@ -1,0 +1,27 @@
+flowchart TD
+    subgraph Users & Founders
+        F[Founder / Interviewer] -->|Runs Discovery Session| CLI[FounderPulse Enterprise CLI]
+        U[Target User / Interviewee] -->|Provides Discovery Feedback| F
+        U -.->|Signs Feedback Consent| CLI
+    end
+
+    subgraph Solana Runtime Engine
+        CLI -->|anchor.recordInterview| SP[FounderPulse Solana Program]
+        SP -->|Updates Campaign PDA| CPDA[(Campaign Account PDA)]
+        SP -->|Creates Attestation PDA| IPDA[(Interview Attestation PDA)]
+        SP -->|Emit DiscoveryEvent| EVT[Solana Event Bus]
+        SP -->|Validate 5 Unique Users| CHECK{Count >= 5?}
+        CHECK -->|Yes| CMPL[Campaign Status: Milestone Achieved]
+        CHECK -->|No| INCR[Campaign Status: In Progress]
+    end
+
+    subgraph Enterprise Off-Chain Integration
+        CLI -->|Post Structured Payload| SLACK[Slack Enterprise Webhook]
+        CLI -->|Dispatch Transcript & Reward| RESEND[Resend Mail API]
+        SLACK -->|Real-Time Channel Alert| CH[#founder-discovery Alerts]
+        RESEND -->|Automated User Gratitude| UBOX[User Inbox / Gift Dispenser]
+    end
+
+    subgraph Continuous Health & Operations
+        OBS[Prometheus / Telemetry Prober] -->|GET /healthz| CLI
+    end

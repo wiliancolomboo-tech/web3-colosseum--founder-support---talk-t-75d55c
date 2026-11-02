@@ -1,0 +1,5 @@
+No more fabricated user validation in pitch decks. 
+
+Verifiable proof of customer love, automated accelerator reporting, and skin-in-the-game user attribution.
+
+Live on Devnet. Built for Colosseum champions. Let’s ship: github.com/solana-founderpulse 🚀🪐 #Solana #Colosseum

@@ -1,0 +1,1 @@
+solana account <FOUNDER_REGISTRY_PDA> --url devnet

@@ -1,0 +1,13 @@
+{
+  "status": "healthy",
+  "programId": "UserLoop111111111111111111111111111111111111",
+  "founderPubkey": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+  "interviewsRecorded": 5,
+  "milestoneReached": true,
+  "lastAttestationTimestamp": 1716321900,
+  "integrations": {
+    "slack": "connected",
+    "discord": "connected",
+    "resend": "connected"
+  }
+}

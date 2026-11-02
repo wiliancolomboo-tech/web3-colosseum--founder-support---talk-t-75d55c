@@ -1,0 +1,4 @@
+client/
+├── package.json
+├── tsconfig.json
+└── orchestrator.ts

@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  founderloop-orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: founderloop_agent
+    restart: unless-stopped
+    environment:
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - PROGRAM_ID=FLoop555555555555555555555555555555555555555
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - FOUNDER_PRIVATE_KEY=${FOUNDER_PRIVATE_KEY}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3

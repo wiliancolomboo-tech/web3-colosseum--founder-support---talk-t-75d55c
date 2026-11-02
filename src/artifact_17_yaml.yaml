@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  userloop-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: userloop-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - FOUNDER_SECRET_KEY=${FOUNDER_SECRET_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - USDC_MINT_PUBKEY=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3

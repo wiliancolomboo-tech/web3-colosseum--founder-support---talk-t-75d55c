@@ -1,0 +1,19 @@
++----------------------------------------------------------------------------------------------------+
+|                                    COLOSSEUM PULSE5 ARCHITECTURE                                   |
++----------------------------------------------------------------------------------------------------+
+|  [Founder Workstation]                                                                             |
+|      |                                                                                             |
+|      +--> Pulse5 CLI (TypeScript)                                                                  |
+|             |                                                                                      |
+|             +--> 1. Solana RPC (Anchor / Devnet / Mainnet)                                         |
+|             |      |                                                                               |
+|             |      +--> Program: Pulse5UserAttestationEngine111111111111111                         |
+|             |             ├── Campaign Account (PDA: ['campaign', founder])                        |
+|             |             └── 5x Interview Accounts (PDA: ['interview', campaign, index])           |
+|             |                                                                                      |
+|             +--> 2. Resend API Client (v2 REST API)                                               |
+|             |      └── Transmits Executive User Interview Synthesis to mentors@colosseum.org       |
+|             |                                                                                      |
+|             +--> 3. Enterprise Slack Incoming Webhook (v1 HTTPS)                                   |
+|                    └── Broadcasts formatted alerts with actionable founder insights                |
++----------------------------------------------------------------------------------------------------+

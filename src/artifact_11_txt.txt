@@ -1,0 +1,5 @@
+"Talk to 5 users" is the #1 rule at @Colosseum. 
+
+Yet 90% of hackathon founders still submit unvalidated assumptions with zero proof they actually engaged their customer base.
+
+Introducing Proof-of-Interview (PoI): The on-chain customer discovery protocol for Solana founders. 🧵👇

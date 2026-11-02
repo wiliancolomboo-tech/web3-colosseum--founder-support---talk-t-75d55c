@@ -1,0 +1,9 @@
+Engineered for scale:
+✅ Full @AnchorLang contract with zero unsafe assumptions
+✅ Integrated with @resend for transactional receipts & @SlackHQ dev alerts
+✅ 100% turnkey via Docker & TypeScript SDK
+
+Ready for the next cohort of @Colosseum founders to validate PMF on Solana.
+
+GitHub: https://github.com/colosseum-org/founder-discovery-proof
+#Solana #Colosseum #BuildOnSolana 🚀

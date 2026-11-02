@@ -1,0 +1,1 @@
+solana account <FOUNDER_CAMPAIGN_PDA> --output json

@@ -1,0 +1,8 @@
+{
+  "status": "HEALTHY",
+  "program_id": "Pulse555555555555555555555555555555555555555",
+  "cluster": "devnet",
+  "synced_slot": 298114092,
+  "resend_connected": true,
+  "slack_telemetry_active": true
+}

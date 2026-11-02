@@ -1,0 +1,7 @@
+How it works under the hood:
+1️⃣ Anchor Smart Contract locks bounty escrow for 5 users
+2️⃣ Audio notes & friction logs hashed into SHA-256 cryptographic digests
+3️⃣ Instant SOL payout on completion
+4️⃣ Webhooks push live synthesis to Slack & user receipts via @resend
+
+Zero sybil noise. 100% verified signal.

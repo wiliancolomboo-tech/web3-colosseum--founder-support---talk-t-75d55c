@@ -1,7 +1,14 @@
-[ Ecosystem User Wallet ]  -- (Ed25519 SIWS Feedback Signature) --+
-                                                                     |
-                                                                     v
-   [ Founder CLI / Web App ] ---> [ Anchor Program PDA Engine ] ---> [ On-Chain Attestation ]
-                                         |
-                                         +---> [ Resend API ] ---> Mentor/Investor Email
-                                         +---> [ Discord/Slack ] -> Live Hackathon Feed
++------------------------------------+
+                      |   Colosseum Founder (Dashboard)    |
+                      +-----------------+------------------+
+                                        |
+                            1. Initialize Campaign
+                            2. Fund Escrow (SOL/USDC)
+                                        v
++------------------+         +----------------------+         +--------------------+
+|  Target User /   | ------> | Anchor Smart Contract|<------- |  Automated Worker  |
+| Ecosystem Tester |         |  (UserLoop Program)  |         | (Slack + Resend)   |
++------------------+         +----------------------+         +--------------------+
+        |                               |                                |
+        | 3. Submit Session Attestation | 4. Release Escrow Reward       | 5. Dispatch Summary
+        +-----------------------------> |    & Mint Verifiable Badge     +---> Slack & Email

@@ -1,0 +1,9 @@
+Solana founders can now turn discovery interviews into cryptographic milestone proofs for investors & Colosseum judges.
+
+✅ 100% test coverage
+✅ Non-custodial PDA vault
+✅ Turnkey Docker deployment
+
+Check out our open-source submission & runbook: github.com/colosseum-bounty/founder-support-talk-to-5-users
+
+#Solana #Colosseum #Web3Founders

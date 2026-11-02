@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  userloop-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: userloop-engine-prod
+    restart: always
+    environment:
+      - PORT=8080
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - PROGRAM_ID=Loopx5v111111111111111111111111111111111111
+      - SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+      - RESEND_API_KEY=re_enterprise_123456789
+      - MENTOR_RECIPIENT_EMAIL=mentors@colosseum.org
+    ports:
+      - "8080:8080"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"

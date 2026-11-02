@@ -1,0 +1,20 @@
+1/3
+Building in @Colosseum's Solana Hackathon? Stop faking user discovery in slide decks. 
+
+We built "FounderProof" — an on-chain, cryptographically verifiable interview protocol that guarantees you talk to 5 real users before pitching. ⚡️🔍
+
+Here is how we solved founder validation forever 🧵👇
+
+2/3
+🛠️ Under the hood:
+• Anchor PDA state escrow automatically rewards interviewees in SOL/USDC upon session completion.
+• Dual Ed25519 signatures hash discovery notes into immutable on-chain transcripts.
+• Automated webhook engine notifies teams via @resend & Slack. No fake claims. 100% verified.
+
+3/3
+Colosseum judges can now audit founder validation directly on @solana Explorer via the `MilestoneAchieved` on-chain event.
+
+Turnkey open-source repo & Docker pipeline ready for deployment:
+👉 github.com/solana-founders/founderproof-talk-to-5
+
+Built for the builders. Let's ship! 🚀 #Solana #Colosseum

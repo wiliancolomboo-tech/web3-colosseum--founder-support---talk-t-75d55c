@@ -1,0 +1,29 @@
+{
+  "name": "userloop-sol",
+  "version": "1.0.0",
+  "description": "Colosseum Founder Support - Talk to 5 Users Verification Engine",
+  "main": "dist/index.js",
+  "bin": {
+    "userloop": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "service": "node dist/worker.js"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@solana/web3.js": "^1.95.3",
+    "axios": "^1.7.7",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.28.1",
+    "resend": "^3.5.0",
+    "tweetnacl": "^1.0.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.9",
+    "typescript": "^5.5.2"
+  }
+}

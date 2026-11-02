@@ -1,0 +1,11 @@
+GET /health
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "status": "healthy",
+  "programId": "ColoUserProof1111111111111111111111111111111",
+  "connection": "connected",
+  "solanaSlot": 284192031,
+  "uptimeSeconds": 14209
+}

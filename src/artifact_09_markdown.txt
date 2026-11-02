@@ -1,0 +1,18 @@
+1/3
+🚨 Most hackathon projects fail because founders write code without talking to actual users. 
+
+For the @ColosseumOrg Founder Support track, we built "Proof-of-Interview": the first cryptographically verifiable customer discovery engine on @solana. 🧵👇
+
+2/3
+How it works:
+⚡ Founders create a 5-user interview sprint & fund micro-rewards
+🔐 Raw transcripts are hashed (SHA-256) & anchored via Anchor PDAs
+💸 0.05 SOL automatically releases to interviewee wallets upon call completion
+📊 Live mentor alerts stream to Discord + @resend confirmation receipts
+
+3/3
+No more vanity slides or unverified claims. Just pure, provable founder velocity anchored directly to the Solana blockchain. 
+
+5/5 users talked to, attested, and shipped.
+
+Check out the code, run the tests, and verify on-chain: https://github.com/colosseum-org/founder-discovery-poi 🚀 #Solana #Colosseum

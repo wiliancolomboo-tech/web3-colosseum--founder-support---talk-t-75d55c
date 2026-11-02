@@ -1,0 +1,22 @@
+1/3
+"Talk to 5 users" is the #1 instruction given to @Colosseum founders. 
+Yet most feedback lives in unverified Notion docs or fragmented DMs.
+
+Introducing FounderProof: An open-source, on-chain customer discovery & attestation protocol built on @Solana. 🧵👇
+
+2/3
+With FounderProof:
+✅ Dual-signed Proof-of-Interview via Ed25519
+✅ Deterministic PDA state tracking (threshold = 5 users)
+✅ Anti-sybil validation & SHA-256 feedback digests
+✅ Instant relay to Slack for mentors & @Resend for user receipts
+
+No fluff. Cryptographic verification of Product-Market Fit.
+
+3/3
+100% Rust Anchor contract + automated TS orchestration daemon ready for turnkey deployment.
+
+Empowering founders to build what users actually want, anchored directly to Solana.
+
+GitHub & Submission: https://github.com/colosseum-founder-proof/core
+cc @Colosseum @solana #Solana #SolanaHackathon

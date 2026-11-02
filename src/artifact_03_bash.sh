@@ -1,0 +1,1 @@
+anchor init founder_support --template multiple

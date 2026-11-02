@@ -1,0 +1,5 @@
+"Talk to 5 users before writing a single line of code."
+
+Every @Colosseum mentor repeats it. 90% of founders fail it, fake it, or interview friends in an echo chamber.
+
+We built the Verifiable Proof-of-Dialogue Protocol on @solana: cryptographically attested user research backed by on-chain micro-escrows. 🧵👇

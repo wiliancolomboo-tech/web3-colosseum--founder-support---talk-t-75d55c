@@ -1,0 +1,6 @@
+PORT=8080
+SOLANA_RPC_URL=https://api.devnet.solana.com
+FOUNDER_SECRET_KEY=[12,43,156,233,...] # 64-byte array
+RESEND_API_KEY=re_123456789abcdef
+SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+USDC_MINT_PUBKEY=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU

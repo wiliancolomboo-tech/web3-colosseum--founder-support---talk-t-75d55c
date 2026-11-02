@@ -1,0 +1,8 @@
+PORT=3000
+NODE_ENV=production
+SOLANA_RPC_URL=https://api.devnet.solana.com
+PROGRAM_ID=FndrLoop11111111111111111111111111111111111
+FOUNDER_PRIVATE_KEY=[1,2,3...255] # Secret key byte array
+SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+RESEND_API_KEY=re_123456789abcdef
+RESEND_FROM_EMAIL=interviews@founderproof.colosseum.org

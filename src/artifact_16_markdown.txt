@@ -1,0 +1,17 @@
+1/3 🚨 Most startup founders skip the hardest part of building: talking to real users. 
+
+For the @Colosseum hackathon, we built "Colosseum UserLoop" — bringing cryptographic proof and automation to customer discovery on @solana. 
+
+Here is how we turn 5 interviews into an on-chain milestone: 👇🧵
+
+2/3 ⚡ How it works:
+1️⃣ Founders interview 5 target users & capture structured feedback (NPS, WTP in SOL, pain points).
+2️⃣ Users co-sign the SHA-256 transcript hash on Solana Anchor PDAs.
+3️⃣ Hitting 5 interviews automatically unlocks the milestone & dispatches insights to mentors via Slack & @resend!
+
+3/3 🏆 No fake metrics. No vanity surveys. Just verifiable proof of product-market fit on Solana. 
+
+Complete smart contract, Anchor tests, and turnkey Docker orchestration ready for all @Colosseum founders:
+🔗 https://github.com/colosseum-org/userloop-engine
+
+#Solana #Colosseum #BuildInPublic #Web3Founders

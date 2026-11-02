@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  userpulse-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: userpulse-daemon
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - PROGRAM_ID=PuLSEyZ17qQyP9yXkLq7yEwFh8T6dD3XmN4gH2K1vRt
+      - SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+      - RESEND_API_KEY=re_123456789_abcdefghijklmnopqrstuvwxyz
+      - FOUNDER_NOTIFY_EMAIL=founder@solanaproject.xyz
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Worker Operational')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

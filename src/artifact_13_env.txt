@@ -1,0 +1,10 @@
+# Solana Network Configuration
+SOLANA_RPC_URL=https://api.devnet.solana.com
+SOLANA_NETWORK=devnet
+
+# Enterprise Integration Credentials
+RESEND_API_KEY=re_1234567890abcdef
+SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+
+# Keypair Paths
+FOUNDER_KEYPAIR_PATH=/usr/src/app/keys/founder.json

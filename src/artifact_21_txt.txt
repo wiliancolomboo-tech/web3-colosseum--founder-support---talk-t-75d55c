@@ -1,0 +1,5 @@
+Colosseum founders can now prove true product-market validation on-chain with immutable SHA-256 transcript commitments.
+
+Talk to 5 users. Close the feedback loop. Build products people actually want.
+
+Open-source & live on Solana Devnet: https://github.com/colosseum-org/founder-loop #Solana #Colosseum

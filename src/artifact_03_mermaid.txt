@@ -1,0 +1,29 @@
+flowchart TD
+    subgraph ClientLayer ["1. Off-Chain Discovery & Verification Layer"]
+        A["Founder Host\n(Keypair A)"] -->|"Conducts 30-min Interview"| B["Target User\n(Keypair B)"]
+        A -->|"Generates Transcript\n& Summary Hash"| C["Transcript SHA-256\n+ Sentiment Vector"]
+        B -->|"Ed25519 Signs\nAttendance Proof"| D["User Attestation Signature\n(session_id + founder_key + timestamp)"]
+    end
+
+    subgraph ServiceLayer ["2. Orchestration & Ingestion Engine (Node/TS)"]
+        D --> E["PoF Enterprise Agent / CLI"]
+        C --> E
+        E -->|"Assembles Anchor Tx\nwith Dual Signatures"| F["Solana RPC Node\n(Jito-protected Devnet/Mainnet)"]
+    end
+
+    subgraph OnChainLayer ["3. Solana Anchor Runtime (colosseum_founder_support)"]
+        F --> G["Instruction: record_user_interview"]
+        G --> H{"PDA Check:\nUnique User?"}
+        H -- "Duplicate Detected" --> I["Revert: AlreadyInterviewed"]
+        H -- "Valid Unique User" --> J["Create Attestation PDA\n(Seed: [attestation, campaign, user])"]
+        J --> K["Update Campaign PDA\nIncrement interview_count (0->5)"]
+        K --> L{"interview_count == 5?"}
+        L -- "Yes" --> M["Emit MilestoneCompleted Event\nUnlock Founder Tier 1 Status"]
+        L -- "No" --> N["Emit UserInterviewRecorded Event"]
+    end
+
+    subgraph EnterpriseDispatch ["4. Enterprise Notification Infrastructure"]
+        M & N --> O["PoF Event Listener Worker"]
+        O -->|"POST /services/T00/B00/X"| P["Colosseum Mentor Slack\n#colosseum-accelerator-pulse"]
+        O -->|"POST api.resend.com/emails"| Q["Resend API Gateway\nExecutive Markdown Digest to Mentors"]
+    end

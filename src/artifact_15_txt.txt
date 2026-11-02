@@ -1,0 +1,5 @@
+1/3 🏆 Founders in @Colosseum hackathons: stop faking user feedback or dropping messy Google Docs notes.
+
+Introducing "ColosseumTalk5" — the first cryptographically verifiable "Talk to 5 Users" milestone engine on @solana. 
+
+Dual Ed25519 SIWS attestations directly on-chain. ⚡🧵👇

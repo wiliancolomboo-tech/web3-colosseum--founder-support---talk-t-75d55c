@@ -1,0 +1,6 @@
+How FounderPulse turns qualitative feedback into cryptographic proof:
+
+1️⃣ Founders log discovery sessions on @Solana with Anchor PDAs
+2️⃣ Interviewees sign transcript digests using their Ed25519 wallets
+3️⃣ Hit 5 verified users ➔ On-chain validation unlocked
+4️⃣ Real-time alerts to Slack & @resend receipts ⚡️

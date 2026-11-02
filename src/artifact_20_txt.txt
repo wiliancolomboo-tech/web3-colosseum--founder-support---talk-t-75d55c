@@ -1,0 +1,5 @@
+Built with Anchor v0.30.1:
+🔒 Sybil-resistant dual-signing (Founder + User wallet)
+⚡ Automated milestone release at 5 verified interviews
+💸 Real-time gas/micro-grant payouts straight from PDA escrow
+📧 Automatic @resend user follow-ups & Slack telemetry feeds

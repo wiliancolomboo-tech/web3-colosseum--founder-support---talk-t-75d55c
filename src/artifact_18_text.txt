@@ -1,0 +1,8 @@
+How PoF works under the hood:
+1️⃣ Deterministic Anchor PDA per project & user session
+2️⃣ SHA-256 transcript & NPS hashing
+3️⃣ Dual Ed25519 co-signatures (Founder 🤝 User)
+4️⃣ Real-time enterprise alerts via @resend & Slack
+5️⃣ On-chain 5-User Certificate minted at 5/5 completion ⚡
+
+Built for speed & zero trust.

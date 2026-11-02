@@ -1,0 +1,11 @@
+{
+  "status": "healthy",
+  "program_id": "CoLosm5UsrDiscovery11111111111111111111111111",
+  "network": "devnet",
+  "pending_attestations": 0,
+  "integrations": {
+    "slack": "connected",
+    "resend": "connected"
+  },
+  "uptime_seconds": 84120
+}

@@ -1,0 +1,10 @@
+GET /health
+Status: 200 OK
+{
+  "status": "healthy",
+  "connected_cluster": "devnet",
+  "founder_address": "8kEw...L2w",
+  "active_campaign": "colo-perps-01",
+  "interviews_recorded": 5,
+  "milestone_satisfied": true
+}

@@ -1,29 +1,24 @@
 flowchart TD
-    subgraph Discovery ["1. Customer Interview Session"]
-        A[Founder] -->|Conducts 30-min Interview| B[Target User / Developer]
-        B -->|Provides Feedback & Metrics| C[Raw Structured Transcript]
-        C -->|Compute Content Digest| D[SHA-256 Transcript Hash]
+    subgraph Founder ["Colosseum Founder Flow"]
+        F1[Founder CLI / WebApp] -->|1. initialize_campaign| SC[Solana UserLoop Program]
+        F1 -->|2. Deposit Escrow SOL| ESC[PDA Campaign Vault]
     end
 
-    subgraph Verification ["2. Cryptographic Attestation"]
-        D -->|Generate SIWS Payload| E[SIWS Challenge Message]
-        B -->|Signs with Phantom / Solflare Ed25519| F[User Signature]
-        A -->|Signs with Founder Authority| G[Founder Signature]
+    subgraph Interviewee ["Qualified Solana User"]
+        U1[Verified User Wallet] -->|3. book_interview| SC
+        U1 -->|4. Conduct 30-min Deep Dive| CALL[Google Meet / Huddle Session]
     end
 
-    subgraph OnChain ["3. Solana Anchor Runtime"]
-        F & G & D -->|RPC: record_interview| H[Founder Support Program]
-        H -->|Verify User & Founder PDAs| I{Valid Signatures & Quota?}
-        I -->|Yes| J[Initialize Interview PDA]
-        I -->|No| K[Revert: Unauthorized or Duplicate]
-        J -->|Increment Counter| L[Update Campaign PDA: 5/5 Users]
-        J -->|Emit| M[InterviewRecorded Event]
+    subgraph OffChainEngine ["UserLoop Engine Worker"]
+        CALL -->|5. Transcripts & Structured Notes| AGENT[Feedback Ingestion Service]
+        AGENT -->|6. Compute Transcript SHA-256| HASH[Digest Hash]
+        AGENT -->|7. Multi-Sig Attestation Tx| SC
+        AGENT -->|8. Dispatch Slack Webhook| SLK[Enterprise Slack #founder-discovery]
+        AGENT -->|9. Dispatch Executive Brief| RSN[Resend Email API]
     end
 
-    subgraph Enterprise ["4. Enterprise Integration & Notification"]
-        M -->|WebSocket Event Listener| N[Orchestrator Automation Agent]
-        N -->|Dispatch Email Digest| O[Resend Enterprise API]
-        N -->|Broadcast Notification| P[Discord / Slack Mentor Webhook]
-        O --> Q[Colosseum Accelerator Mentors]
-        P --> R[Founder Public Discovery Channel]
+    subgraph OnChainExecution ["Solana Runtime State"]
+        SC -->|10. Verify Signatures & State| STATE[Session Account PDA]
+        STATE -->|11. Release Incentive| U1
+        STATE -->|12. Update Milestone Count 5/5| CAMP[Campaign PDA]
     end

@@ -1,0 +1,9 @@
+client/
+├── package.json
+├── tsconfig.json
+└── src/
+    ├── index.ts
+    ├── services/
+    │   ├── slack.ts
+    │   └── resend.ts
+    └── engine.ts

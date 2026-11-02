@@ -1,0 +1,8 @@
+Ready for early-stage teams to ship what users actually want.
+
+📦 100% open-source, turnkey Docker ready, full test suite:
+github.com/colosseum-support/proof-of-feedback
+
+Let's accelerate genuine product-market fit on Solana. 🚀
+
+cc @Colosseum @SolanaFndn #Solana #Web3Founders #BuildInPublic

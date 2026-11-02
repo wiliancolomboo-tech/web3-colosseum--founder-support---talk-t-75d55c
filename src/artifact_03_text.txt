@@ -1,0 +1,12 @@
+programs/userloop/
+├── Cargo.toml
+└── src/
+    ├── errors.rs
+    ├── instructions/
+    │   ├── attest_and_settle.rs
+    │   ├── book_session.rs
+    │   ├── close_campaign.rs
+    │   ├── initialize_campaign.rs
+    │   └── mod.rs
+    ├── state.rs
+    └── lib.rs

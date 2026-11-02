@@ -1,0 +1,8 @@
+1/3 🏛️ Most early-stage Web3 startups fail because they build in an echo chamber. For the @Colosseum hackathon milestone "Talk to 5 Users", we built the Proof-of-Discovery (PoD) Protocol on @Solana! Cryptographic proof that founders talk to real users. 🧵👇
+
+2/3 ⚡ How it works:
+1️⃣ Target users verify identity with Sign-In with Solana (SIWS).
+2️⃣ Structured interview insights & hashes are anchored to PDAs on Solana.
+3️⃣ Reaching 5 verified users emits an on-chain event & pings mentors via @resend & Slack. Zero discovery faking!
+
+3/3 🚢 Production-ready Anchor smart contract, automated verification worker, and 100% test coverage. Ready to give Solana founders high-conviction product-market fit velocity. Check out the open-source repo! @Colosseum #Solana #SolanaHackathon

@@ -1,0 +1,7 @@
++--------------------------------------------------------------------------------------+
+| INTERVIEW AGENT / WORKER                                                             |
+|   ├── Solana RPC Endpoint (Devnet/Mainnet via Triton / Helius / QuickNode)           |
+|   ├── Resend API (Transactional dispatch of interview artifacts & reward receipts)  |
+|   ├── Discord / Slack Webhook Gateway (Mentor real-time audit notifications)         |
+|   └── Prometheus /metrics Server (Health, memory, RPC latency, notarization tally)   |
++--------------------------------------------------------------------------------------+

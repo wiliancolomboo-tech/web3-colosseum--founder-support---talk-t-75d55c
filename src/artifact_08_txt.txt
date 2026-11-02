@@ -1,0 +1,9 @@
+OPERATIONAL ENDPOINTS:
+- GET  /healthz              -> Returns { status: "OK", rpc: "connected", slot: 294829101 }
+- GET  /metrics              -> Prometheus telemetry format for session completion & latency
+- POST /api/v1/session/start -> Reserves session PDA slot for vetted user
+- POST /api/v1/attest        -> Submits transcript hash, executes escrow payout, alerts Slack
+
+EMERGENCY CONTROLS:
+- If a user cancels: Founder calls cancel_and_reclaim_campaign after 30-day grace period to reclaim locked SOL/USDC.
+- RPC Failover: Set HTTP fallback RPCs in SOLANA_RPC_URL with comma-separated endpoints (e.g. Helius + Triton).

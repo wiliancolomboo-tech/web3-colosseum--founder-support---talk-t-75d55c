@@ -1,0 +1,3 @@
+"Talk to 5 users." It's the #1 rule at @Colosseum and @ycombinator, yet 90% of hackathon teams fake their customer discovery or let feedback rot in forgotten notes.
+
+Today we're launching Colosseum UserLoop (Echo5): A Solana-native verifiable customer discovery & interview attestation protocol 🧵👇

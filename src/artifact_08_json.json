@@ -1,0 +1,8 @@
+{
+  "status": "healthy",
+  "programId": "ColoSupp5User1111111111111111111111111111111",
+  "rpcLatencyMs": 42,
+  "campaignId": 101,
+  "completedSessions": 5,
+  "milestoneReached": true
+}

@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  feedback-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: colosseum-feedback-orchestrator
+    environment:
+      - SOLANA_RPC_URL=${SOLANA_RPC_URL:-https://api.devnet.solana.com}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_NOTIFY_EMAIL=${RESEND_NOTIFY_EMAIL}
+    volumes:
+      - ./keys:/app/keys:ro
+    command: ["execute-5-interviews", "-f", "/app/keys/founder.json", "-n", "ProductionDApp"]
+    restart: "no"

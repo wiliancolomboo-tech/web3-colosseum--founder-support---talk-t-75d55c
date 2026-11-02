@@ -1,0 +1,7 @@
+SOLANA_RPC_URL="https://api.devnet.solana.com"
+PROGRAM_ID="FndrSupp11111111111111111111111111111111111"
+FOUNDER_PRIVATE_KEY="[12,45,67, ... 89]"
+PROJECT_NAME="SolShield"
+SLACK_WEBHOOK_URL="https://api.example.com/webhooks/alerts/placeholder"
+RESEND_API_KEY="re_1234567890abcdef"
+PORT=8080

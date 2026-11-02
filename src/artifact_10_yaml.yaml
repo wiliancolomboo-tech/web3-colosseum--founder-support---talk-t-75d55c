@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  founderpulse-daemon:
+    build:
+      context: ./packages/daemon
+      dockerfile: Dockerfile
+    container_name: founderpulse-daemon
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - SOLANA_RPC_URL=${SOLANA_RPC_URL}
+      - PROGRAM_ID=${PROGRAM_ID}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

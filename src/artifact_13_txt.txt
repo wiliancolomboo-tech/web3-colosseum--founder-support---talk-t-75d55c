@@ -1,0 +1,8 @@
+Judges and accelerator mentors can now verify discovery velocity on-chain in < 30 seconds.
+
+Tested with 100% assertions passing. 1-click Docker deployment.
+
+Ready for Renaissance & Radar founders. 
+GitHub & live Anchor deployment: https://github.com/colosseum-poi/protocol 
+
+Let’s build what users actually want! 🚀 @Colosseum @solana

@@ -1,0 +1,11 @@
+colosseum-founder-proof/
+├── programs/founder_proof/src/lib.rs
+├── orchestrator/
+│   ├── src/orchestrator.ts
+│   ├── package.json
+│   └── tsconfig.json
+├── tests/founder_proof.ts
+├── Dockerfile
+├── docker-compose.yml
+├── Anchor.toml
+└── README.md

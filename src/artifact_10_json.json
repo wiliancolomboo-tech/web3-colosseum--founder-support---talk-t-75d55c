@@ -1,0 +1,11 @@
+{
+  "status": "healthy",
+  "service": "Colosseum-FounderLoop-Engine",
+  "programId": "FndrSupp111111111111111111111111111111111111",
+  "solanaSlot": 298412948,
+  "milestoneStats": {
+    "target": 5,
+    "completed": 5,
+    "ratio": 1.0
+  }
+}

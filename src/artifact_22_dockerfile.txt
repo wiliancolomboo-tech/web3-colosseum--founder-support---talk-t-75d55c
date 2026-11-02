@@ -1,0 +1,21 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /usr/src/app
+
+COPY client/package*.json ./
+COPY client/tsconfig.json ./
+RUN npm ci
+
+COPY client/src ./src
+RUN npm run build
+
+FROM node:20-alpine AS runner
+WORKDIR /usr/src/app
+
+COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY client/package*.json ./
+COPY client/src/idl ./dist/idl
+
+ENV NODE_ENV=production
+ENTRYPOINT ["node", "dist/agent.js"]

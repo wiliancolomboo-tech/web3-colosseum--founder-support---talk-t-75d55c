@@ -1,0 +1,12 @@
+# Solana Configuration
+SOLANA_RPC_URL="https://api.devnet.solana.com"
+FOUNDER_PRIVATE_KEY="[1,2,3...]" # Array of 64 bytes
+
+# Enterprise Notifications
+SLACK_WEBHOOK_URL="https://api.example.com/webhooks/alerts/placeholder"
+RESEND_API_KEY="re_123456789_abcdefghijklmnopqrstuvwxyz"
+COLOSSEUM_MENTOR_EMAIL="accelerator-mentors@colosseum.org"
+
+# Telemetry
+PORT=8080
+NODE_ENV=production

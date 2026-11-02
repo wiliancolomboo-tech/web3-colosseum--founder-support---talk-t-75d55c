@@ -1,0 +1,5 @@
+Founders spend months building features nobody asked for. 
+
+In the @Colosseum hackathon, the golden rule is simple: Talk to at least 5 target users before writing thousands of lines of code.
+
+We built the Proof-of-Interview (PoI) Engine: on-chain verifiable customer discovery for Solana teams. 🧵👇

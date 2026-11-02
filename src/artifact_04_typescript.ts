@@ -1,370 +1,256 @@
-import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
 import {
   Connection,
   Keypair,
   PublicKey,
-  SystemProgram,
   clusterApiUrl,
+  sendAndConfirmTransaction,
+  Transaction,
 } from "@solana/web3.js";
+import { Program, AnchorProvider, Wallet, Idl, BN } from "@coral-xyz/anchor";
 import * as crypto from "crypto";
-import * as dotenv from "dotenv";
+import axios from "axios";
+import { Resend } from "resend";
+import dotenv from "dotenv";
 
 dotenv.config();
 
-// Contract ABI definition for standalone execution
-const IDL: anchor.Idl = {
-  version: "0.1.0",
-  name: "founder_support",
-  instructions: [
-    {
-      name: "initializeCampaign",
-      accounts: [
-        { name: "campaign", isMut: true, isSigner: false },
-        { name: "founder", isMut: true, isSigner: true },
-        { name: "systemProgram", isMut: false, isSigner: false },
-      ],
-      args: [
-        { name: "projectName", type: "string" },
-        { name: "targetInterviews", type: "u8" },
-      ],
-    },
-    {
-      name: "recordInterview",
-      accounts: [
-        { name: "campaign", isMut: true, isSigner: false },
-        { name: "interviewAttestation", isMut: true, isSigner: false },
-        { name: "founder", isMut: true, isSigner: true },
-        { name: "userWallet", isMut: false, isSigner: true },
-        { name: "systemProgram", isMut: false, isSigner: false },
-      ],
-      args: [
-        { name: "interviewIndex", type: "u8" },
-        { name: "transcriptHash", type: { array: ["u8", 32] } },
-        { name: "npsScore", type: "u8" },
-        { name: "willingToPayLamports", type: "u64" },
-        { name: "painPointCategory", type: "u8" },
-      ],
-    },
-  ],
-  events: [],
-  errors: [],
-};
+// Configuration & Environment Variables
+const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL || clusterApiUrl("devnet");
+const PROGRAM_ID = new PublicKey(process.env.PROGRAM_ID || "Loopx5v111111111111111111111111111111111111");
+const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || "";
+const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
+const MENTOR_RECIPIENT_EMAIL = process.env.MENTOR_RECIPIENT_EMAIL || "mentors@colosseum.org";
 
-export interface InterviewRecord {
-  userWallet: Keypair;
-  userName: string;
-  userRole: string;
-  transcriptNotes: string;
-  npsScore: number;
-  willingToPayLamports: number;
-  painPointCategory: number; // 0: UX, 1: Fees, 2: Performance, 3: Tooling, 4: Other
+const resend = new Resend(RESEND_API_KEY);
+
+export interface InterviewSubmissionPayload {
+  projectName: string;
+  slotIndex: number;
+  founderSecretKey: Uint8Array;
+  intervieweePublicKey: string;
+  transcriptRawText: string;
+  satisfactionScore: number;
+  topFeedbackPoints: string[];
 }
 
-export class ColosseumDiscoveryAgent {
+export class UserLoopEnterpriseEngine {
   private connection: Connection;
-  private founderKeypair: Keypair;
-  private programId: PublicKey;
-  private program: Program;
-  private resendApiKey?: string;
-  private webhookUrl?: string;
 
-  constructor(
-    rpcUrl: string = process.env.SOLANA_RPC_URL || clusterApiUrl("devnet"),
-    founderSecretKey?: Uint8Array
-  ) {
-    this.connection = new Connection(rpcUrl, "confirmed");
-    this.founderKeypair = founderSecretKey
-      ? Keypair.fromSecretKey(founderSecretKey)
-      : Keypair.generate();
-    this.programId = new PublicKey(
-      process.env.PROGRAM_ID || "FndrSupp111111111111111111111111111111111111"
+  constructor() {
+    this.connection = new Connection(SOLANA_RPC_URL, "confirmed");
+  }
+
+  /**
+   * Calculates deterministic SHA-256 digest buffer from raw interview transcript
+   */
+  public hashTranscript(transcript: string): Buffer {
+    return crypto.createHash("sha256").update(transcript, "utf8").digest();
+  }
+
+  /**
+   * Executes Anchor On-chain Attestation and Escrow Disbursement
+   */
+  public async attestSessionOnChain(payload: InterviewSubmissionPayload): Promise<string> {
+    const founderKeypair = Keypair.fromSecretKey(payload.founderSecretKey);
+    const wallet = new Wallet(founderKeypair);
+    const provider = new AnchorProvider(this.connection, wallet, { commitment: "confirmed" });
+
+    // Derive PDAs
+    const [campaignPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("campaign"), founderKeypair.publicKey.toBuffer()],
+      PROGRAM_ID
     );
-    this.resendApiKey = process.env.RESEND_API_KEY;
-    this.webhookUrl = process.env.COMMUNITY_WEBHOOK_URL;
 
-    const wallet = new anchor.Wallet(this.founderKeypair);
-    const provider = new anchor.AnchorProvider(this.connection, wallet, {
-      commitment: "confirmed",
+    const [sessionPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("session"), campaignPda.toBuffer(), Buffer.from([payload.slotIndex])],
+      PROGRAM_ID
+    );
+
+    const [vaultPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("vault"), founderKeypair.publicKey.toBuffer()],
+      PROGRAM_ID
+    );
+
+    const transcriptHash = this.hashTranscript(payload.transcriptRawText);
+    const intervieweePubkey = new PublicKey(payload.intervieweePublicKey);
+
+    console.log(`[Attestation] Processing Slot ${payload.slotIndex} for Campaign ${campaignPda.toBase58()}`);
+
+    // Build Instruction dynamically using Anchor IDL serialization
+    // In production, instantiate `new Program(idl, provider)`
+    const instructionData = Buffer.concat([
+      // Anchor discriminator for "complete_interview": [93, 204, 18, 12, 191, 153, 111, 235]
+      Buffer.from([93, 204, 18, 12, 191, 153, 111, 235]),
+      transcriptHash,
+      Buffer.from([payload.satisfactionScore]),
+    ]);
+
+    const tx = new Transaction().add({
+      keys: [
+        { pubkey: campaignPda, isSigner: false, isWritable: true },
+        { pubkey: sessionPda, isSigner: false, isWritable: true },
+        { pubkey: intervieweePubkey, isSigner: false, isWritable: true },
+        { pubkey: vaultPda, isSigner: false, isWritable: true },
+        { pubkey: founderKeypair.publicKey, isSigner: true, isWritable: false },
+        { pubkey: PublicKey.default, isSigner: false, isWritable: false }, // SystemProgram
+      ],
+      programId: PROGRAM_ID,
+      data: instructionData,
     });
-    this.program = new Program(IDL, this.programId, provider);
+
+    const txSignature = await sendAndConfirmTransaction(this.connection, tx, [founderKeypair]);
+    console.log(`[Attestation Complete] Tx Hash: ${txSignature}`);
+    return txSignature;
   }
 
-  public getFounderPubkey(): PublicKey {
-    return this.founderKeypair.publicKey;
-  }
-
-  public getCampaignPda(projectName: string): [PublicKey, number] {
-    return PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("campaign"),
-        this.founderKeypair.publicKey.toBuffer(),
-        Buffer.from(projectName),
-      ],
-      this.programId
-    );
-  }
-
-  public getInterviewPda(
-    campaignPda: PublicKey,
-    index: number
-  ): [PublicKey, number] {
-    return PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("interview"),
-        campaignPda.toBuffer(),
-        Buffer.from([index]),
-      ],
-      this.programId
-    );
-  }
-
-  public async initializeCampaign(
-    projectName: string,
-    targetInterviews: number = 5
-  ): Promise<string> {
-    const [campaignPda] = this.getCampaignPda(projectName);
-    console.log(`[+] Initializing Campaign for "${projectName}"...`);
-    console.log(`    Campaign PDA: ${campaignPda.toBase58()}`);
-
-    const tx = await this.program.methods
-      .initializeCampaign(projectName, targetInterviews)
-      .accounts({
-        campaign: campaignPda,
-        founder: this.founderKeypair.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([this.founderKeypair])
-      .rpc();
-
-    console.log(`[✓] Campaign Initialized! Tx Signature: ${tx}`);
-    return tx;
-  }
-
-  public async recordInterview(
-    projectName: string,
-    index: number,
-    data: InterviewRecord
-  ): Promise<{ txSignature: string; attestationPda: PublicKey }> {
-    const [campaignPda] = this.getCampaignPda(projectName);
-    const [attestationPda] = this.getInterviewPda(campaignPda, index);
-
-    // Compute cryptographic SHA-256 hash of structured transcript
-    const hash = crypto
-      .createHash("sha256")
-      .update(
-        JSON.stringify({
-          interviewer: this.founderKeypair.publicKey.toBase58(),
-          user: data.userWallet.publicKey.toBase58(),
-          name: data.userName,
-          role: data.userRole,
-          notes: data.transcriptNotes,
-          timestamp: Date.now(),
-        })
-      )
-      .digest();
-
-    const transcriptHashArray = Array.from(new Uint8Array(hash));
-
-    console.log(`[+] Submitting Interview #${index + 1} with ${data.userName}...`);
-    console.log(`    User Pubkey: ${data.userWallet.publicKey.toBase58()}`);
-    console.log(`    Digest: 0x${hash.toString("hex")}`);
-
-    const tx = await this.program.methods
-      .recordInterview(
-        index,
-        transcriptHashArray,
-        data.npsScore,
-        new anchor.BN(data.willingToPayLamports),
-        data.painPointCategory
-      )
-      .accounts({
-        campaign: campaignPda,
-        interviewAttestation: attestationPda,
-        founder: this.founderKeypair.publicKey,
-        userWallet: data.userWallet.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([this.founderKeypair, data.userWallet])
-      .rpc();
-
-    console.log(`[✓] Attestation Confirmed. Tx: ${tx}`);
-
-    // Enterprise notification hooks
-    await this.notifyWebhook(projectName, index + 1, data, tx);
-    return { txSignature: tx, attestationPda };
-  }
-
-  private async notifyWebhook(
-    projectName: string,
-    interviewNum: number,
-    data: InterviewRecord,
-    txHash: string
+  /**
+   * Broadcasts structured notification to Enterprise Slack Channel
+   */
+  public async notifySlack(
+    payload: InterviewSubmissionPayload,
+    txSignature: string
   ): Promise<void> {
-    if (!this.webhookUrl) return;
-
-    const payload = {
-      content: `🎯 **Colosseum Discovery Milestone**: Interview #${interviewNum}/5 Verified!`,
-      embeds: [
-        {
-          title: `User Discovery: ${projectName}`,
-          color: 0x14f195, // Solana Green
-          fields: [
-            { name: "User", value: `${data.userName} (${data.userRole})`, inline: true },
-            { name: "NPS Score", value: `${data.npsScore}/10`, inline: true },
-            {
-              name: "Willing to Pay",
-              value: `${data.willingToPayLamports / 1e9} SOL`,
-              inline: true,
-            },
-            { name: "Core Feedback", value: data.transcriptNotes },
-            {
-              name: "Solana Explorer",
-              value: `[View Transaction](https://explorer.solana.com/tx/${txHash}?cluster=devnet)`,
-            },
-          ],
-          footer: { text: "Verified via Colosseum UserPulse Engine" },
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    };
-
-    try {
-      await fetch(this.webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      console.log(`[✓] Webhook notification dispatched.`);
-    } catch (err) {
-      console.warn(`[!] Webhook notification failed: ${err}`);
-    }
-  }
-
-  public async sendExecutiveReport(
-    projectName: string,
-    recipientEmail: string,
-    interviewSummary: string
-  ): Promise<void> {
-    if (!this.resendApiKey) {
-      console.log("[i] Resend API key missing; skipping email dispatch.");
+    if (!SLACK_WEBHOOK_URL) {
+      console.warn("[Slack] Skipping notification: No SLACK_WEBHOOK_URL specified.");
       return;
     }
 
-    try {
-      const response = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.resendApiKey}`,
-          "Content-Type": "application/json",
+    const payloadBlock = {
+      text: `🚀 *New User Interview Attested on Solana!* (${payload.projectName})`,
+      blocks: [
+        {
+          type: "header",
+          text: {
+            type: "plain_text",
+            text: `🎯 Colosseum Founder Support: Interview #${payload.slotIndex + 1}/5 Complete`,
+            emoji: true,
+          },
         },
-        body: JSON.stringify({
-          from: "accelerator@colosseum-founder-support.dev",
-          to: recipientEmail,
-          subject: `[Colosseum Verified Discovery] 5 User Interviews Completed: ${projectName}`,
-          html: `
-            <h2>Colosseum Founder Discovery Completion Report</h2>
-            <p><strong>Project:</strong> ${projectName}</p>
-            <p><strong>Founder:</strong> ${this.founderKeypair.publicKey.toBase58()}</p>
-            <p>All 5 customer discovery interviews have been cryptographically verified and committed to the Solana blockchain.</p>
-            <hr/>
-            <h3>Synthesis of Customer Pain Points</h3>
-            <p>${interviewSummary}</p>
-            <hr/>
-            <p><em>Generated autonomously by Colosseum UserPulse Attestation Protocol.</em></p>
-          `,
-        }),
-      });
+        {
+          type: "section",
+          fields: [
+            { type: "mrkdwn", text: `*Project:*\n${payload.projectName}` },
+            { type: "mrkdwn", text: `*User Wallet:*\n\`${payload.intervieweePublicKey.slice(0, 8)}...${payload.intervieweePublicKey.slice(-6)}\`` },
+            { type: "mrkdwn", text: `*CSAT Score:*\n${payload.satisfactionScore} / 10 ⭐` },
+            { type: "mrkdwn", text: `*Solana Explorer:*\n<https://explorer.solana.com/tx/${txSignature}?cluster=devnet|View On-Chain Tx>` },
+          ],
+        },
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `*Key Friction Points Identified:*\n${payload.topFeedbackPoints.map(p => `• ${p}`).join("\n")}`,
+          },
+        },
+        { type: "divider" },
+      ],
+    };
 
-      if (response.ok) {
-        console.log(`[✓] Executive discovery digest successfully sent via Resend.`);
-      }
-    } catch (error) {
-      console.error("[!] Failed to dispatch Resend executive digest:", error);
+    await axios.post(SLACK_WEBHOOK_URL, payloadBlock);
+    console.log("[Slack] Successfully posted interview insight to channel.");
+  }
+
+  /**
+   * Dispatches executive briefing via Resend API to Colosseum mentors
+   */
+  public async sendMentorDigest(
+    payload: InterviewSubmissionPayload,
+    txSignature: string
+  ): Promise<void> {
+    if (!RESEND_API_KEY) {
+      console.warn("[Resend] Skipping email: No RESEND_API_KEY configured.");
+      return;
     }
+
+    const subject = `[Colosseum Discovery] ${payload.projectName} completed Interview #${payload.slotIndex + 1}/5`;
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <h2 style="color: #4f46e5;">Colosseum Founder Support: User Discovery Attested</h2>
+        <p>Founder has completed interview <strong>#${payload.slotIndex + 1} of 5</strong> under the UserLoop Protocol.</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Project Name:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${payload.projectName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Interviewee:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><code>${payload.intervieweePublicKey}</code></td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Satisfaction / Usability:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>${payload.satisfactionScore} / 10</strong></td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Solana Tx Attestation:</strong></td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;"><a href="https://explorer.solana.com/tx/${txSignature}?cluster=devnet">View Signature</a></td>
+          </tr>
+        </table>
+
+        <h3>Critical User Insights:</h3>
+        <ul>
+          ${payload.topFeedbackPoints.map((f) => `<li>${f}</li>`).join("")}
+        </ul>
+
+        <div style="margin-top: 30px; font-size: 12px; color: #64748b;">
+          Cryptographic Transcript Hash: <code>${this.hashTranscript(payload.transcriptRawText).toString("hex")}</code>
+        </div>
+      </div>
+    `;
+
+    await resend.emails.send({
+      from: "discovery@userloop.colosseum.dev",
+      to: MENTOR_RECIPIENT_EMAIL,
+      subject,
+      html: htmlContent,
+    });
+
+    console.log(`[Resend] Successfully dispatched mentor briefing email to ${MENTOR_RECIPIENT_EMAIL}`);
+  }
+
+  /**
+   * Unified Pipeline Execution
+   */
+  public async processCompleteInterviewFlow(payload: InterviewSubmissionPayload): Promise<string> {
+    console.log(`Starting discovery attestation pipeline for slot ${payload.slotIndex}...`);
+    const txSig = await this.attestSessionOnChain(payload);
+    await Promise.all([
+      this.notifySlack(payload, txSig),
+      this.sendMentorDigest(payload, txSig),
+    ]);
+    return txSig;
   }
 }
 
 // -----------------------------------------------------------------------------
-// STANDALONE EXECUTION RUNNER: TALK TO 5 USERS
+// Interactive Automation CLI Entrypoint
 // -----------------------------------------------------------------------------
-async function run() {
-  console.log("===============================================================");
-  console.log("   COLOSSEUM FOUNDER SUPPORT: TALK TO 5 USERS PROTOCOL        ");
-  console.log("===============================================================");
+async function runCli() {
+  const engine = new UserLoopEnterpriseEngine();
+  const mockFounder = Keypair.generate();
+  const mockUser = Keypair.generate();
 
-  const agent = new ColosseumDiscoveryAgent();
-  const projectName = "SolPay-Stream-" + Math.floor(Math.random() * 10000);
+  const dummyPayload: InterviewSubmissionPayload = {
+    projectName: "Solana zkDEX",
+    slotIndex: 0,
+    founderSecretKey: mockFounder.secretKey,
+    intervieweePublicKey: mockUser.publicKey.toBase58(),
+    transcriptRawText: "The user had trouble finding the slip threshold setting in mobile view. Loved the RPC speed.",
+    satisfactionScore: 8,
+    topFeedbackPoints: [
+      "Slippage setting buried in secondary nested settings modal",
+      "Sub-second settlement on Devnet blew expectations away",
+      "Requests Ledger hardware wallet support before mainnet launch",
+    ],
+  };
 
-  // 5 Real Ecosystem Personas / Builders
-  const fiveUserInterviews: InterviewRecord[] = [
-    {
-      userWallet: Keypair.generate(),
-      userName: "Alex Rivera",
-      userRole: "Lead DeV at Liquidity Protocol",
-      transcriptNotes: "RPC latency spikes during epoch boundaries break our settlement loops. Needs streaming micropayments.",
-      npsScore: 9,
-      willingToPayLamports: 2_000_000_000, // 2 SOL/mo
-      painPointCategory: 2, // Performance
-    },
-    {
-      userWallet: Keypair.generate(),
-      userName: "Sarah Chen",
-      userRole: "Solana Mobile App Founder",
-      transcriptNotes: "Current dApp store onboarding has high wallet signature friction. Seed vault support is mandatory.",
-      npsScore: 8,
-      willingToPayLamports: 1_500_000_000, // 1.5 SOL/mo
-      painPointCategory: 0, // UX
-    },
-    {
-      userWallet: Keypair.generate(),
-      userName: "Marcus Vance",
-      userRole: "Treasury Manager at NFT Syndicate",
-      transcriptNotes: "Multisig execution takes too many manual signers. We need programmatic automated payroll streams.",
-      npsScore: 10,
-      willingToPayLamports: 5_000_000_000, // 5 SOL/mo
-      painPointCategory: 3, // Tooling
-    },
-    {
-      userWallet: Keypair.generate(),
-      userName: "Elena Rostova",
-      userRole: "DeFi Yield Farmer",
-      transcriptNotes: "Priority fee calculation during congestion is erratic; tx drops without explanation.",
-      npsScore: 7,
-      willingToPayLamports: 500_000_000, // 0.5 SOL/mo
-      painPointCategory: 1, // Fees
-    },
-    {
-      userWallet: Keypair.generate(),
-      userName: "Darius K.",
-      userRole: "Cross-Chain Bridge Security Auditor",
-      transcriptNotes: "Clear proof-of-authority is needed for off-chain oracles. Willing to pay enterprise tier for formal verification.",
-      npsScore: 9,
-      willingToPayLamports: 10_000_000_000, // 10 SOL/mo
-      painPointCategory: 4, // Other
-    },
-  ];
-
-  console.log(`[i] Founder Identity: ${agent.getFounderPubkey().toBase58()}`);
-  console.log(`[i] Target: Talk to ${fiveUserInterviews.length} Users`);
-
-  console.log("\n--- Step 1: Initializing Campaign PDA ---");
-  // In live testnet, founder wallet requires airdrop/balance
-  console.log("[i] Simulating or executing campaign registration...");
-
-  for (let i = 0; i < fiveUserInterviews.length; i++) {
-    const interview = fiveUserInterviews[i];
-    console.log(`\n--- Step 2.${i + 1}: Executing Interview ${i + 1} of 5 ---`);
-    console.log(`User: ${interview.userName} [${interview.userRole}]`);
-    console.log(`Pain Point Feedback: "${interview.transcriptNotes}"`);
-    console.log(`NPS Score: ${interview.npsScore}/10 | Value Anchor: ${interview.willingToPayLamports / 1e9} SOL`);
-  }
-
-  console.log("\n===============================================================");
-  console.log("   5/5 USERS INTERVIEWED & CRYPTOGRAPHICALLY ATTESTED         ");
-  console.log("===============================================================");
+  console.log("=== UserLoop Enterprise Attestation Client Initialized ===");
+  console.log("Calculated Transcript SHA256:", engine.hashTranscript(dummyPayload.transcriptRawText).toString("hex"));
 }
 
 if (require.main === module) {
-  run().catch(console.error);
+  runCli().catch((err) => {
+    console.error("Execution error:", err);
+    process.exit(1);
+  });
 }

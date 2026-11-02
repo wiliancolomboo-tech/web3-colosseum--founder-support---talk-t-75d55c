@@ -1,0 +1,15 @@
+1/3 🚨 Most crypto founders skip user discovery or fake customer research with generic surveys. 
+
+For the @Colosseum hackathon & accelerator, we built #FounderPulse: an on-chain, verifiable "Talk to 5 Users" protocol on @Solana.
+
+No fake feedback. Dual-signed proof-of-interview. 🧵👇
+
+2/3 How it works:
+⚡️ Cal.com / Calendly hook triggers SiWS dual-signature consent
+⚡️ Transcript hashed (SHA-256) & anchored directly into an @AnchorLang PDA
+⚡️ Escrowed incentive micro-grants unlock deterministically for interviewees
+⚡️ Real-time updates delivered to Slack & @resend
+
+3/3 Verifiable discovery enables @Colosseum mentors and investors to audit product-market fit milestones straight from the Solana ledger with zero sybil spoofing.
+
+Code is 100% open-source, Dockerized, and production-ready: github.com/colosseum/founder-pulse 🌐🦀

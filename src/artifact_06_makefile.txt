@@ -1,0 +1,15 @@
+.PHONY: build test deploy start-daemon
+
+build:
+	anchor build
+
+test:
+	anchor test
+
+deploy-devnet:
+	solana config set --url https://api.devnet.solana.com
+	anchor build
+	solana program deploy ./target/deploy/founder_pulse.so --program-id ./target/deploy/founder_pulse-keypair.json
+
+start-daemon:
+	docker compose up -d --build

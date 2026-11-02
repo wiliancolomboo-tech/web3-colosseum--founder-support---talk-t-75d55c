@@ -1,0 +1,5 @@
+How PoI works under the hood:
+1️⃣ Founders register campaigns & fund an automated reward escrow vault
+2️⃣ 5 discovery sessions conducted with dual-signature Ed25519 attestations
+3️⃣ Canonical transcript digests anchored on @solana
+4️⃣ Real-time feedback streamed to Slack & @resend for Colosseum mentors!

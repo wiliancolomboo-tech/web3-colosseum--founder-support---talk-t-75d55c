@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  pulse-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pulse5_discovery_daemon
+    restart: unless-stopped
+    environment:
+      - SOLANA_RPC_URL=https://api.devnet.solana.com
+      - FOUNDER_KEYPAIR_PATH=/secrets/founder-keypair.json
+      - PROGRAM_ID=PuLSE55555555555555555555555555555555555555
+      - SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
+      - RESEND_API_KEY=re_1234567890abcdef
+      - RESEND_FROM_EMAIL=proofs@pulse5.colosseum.org
+    volumes:
+      - ./secrets:/secrets:ro
+    healthcheck:
+      test: ["CMD-SHELL", "node -e 'process.exit(0)'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

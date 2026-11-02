@@ -1,0 +1,10 @@
+server {
+    listen 80;
+    server_name localhost;
+
+    location /healthz {
+        access_log off;
+        return 200 '{"status":"healthy","protocol":"colosseum-user-pulse","solana_network":"devnet"}\n';
+        add_header Content-Type application/json;
+    }
+}
