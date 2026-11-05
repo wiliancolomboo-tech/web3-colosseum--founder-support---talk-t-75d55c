@@ -12,7 +12,7 @@ services:
       - FOUNDER_KEYPAIR_PATH=/secrets/founder-keypair.json
       - PROGRAM_ID=PuLSE55555555555555555555555555555555555555
       - SLACK_WEBHOOK_URL=https://api.example.com/webhooks/alerts/placeholder
-      - RESEND_API_KEY=re_1234567890abcdef
+      - RESEND_API_KEY=re_test_000000000000000000000000
       - RESEND_FROM_EMAIL=proofs@pulse5.colosseum.org
     volumes:
       - ./secrets:/secrets:ro
